@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let showMenu = false;
+    const generateNewFile = () => (
+      {
+        name: "OS",
+        icon: "file",
+        content: "Teste"
+      }
+    );
+    
+    const files = [{
+        name: "OS",
+        icon: "file",
+        content: "Teste"
+      }];
+
+    const handleClick = e => {
+      if (e.pageX < 64 && e.pageY > (canvas.height - 64)) {
+        showMenu = !showMenu;
+      }
+    }
+    canvas.addEventListener('click', handleClick, false);
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const update = () => {
+      draw()
+
+      requestAnimationFrame(update);
+    }
+
+    const draw = () => {
+      background();
+
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, canvas.height - 64, canvas.width, 64);
+
+      ctx.fillStyle = "blue";
+      ctx.beginPath();
+      ctx.arc(32, canvas.height - 32, 32, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      if (showMenu) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, canvas.height - 256 - 64, 256, 256);
+
+        ctx.fillStyle = "black"
+        ctx.font = "30px Arial";
+        ctx.fillText("Shutdown", 32, canvas.height - 80);
+      }
+
+      files.forEach((file, idx) => {
+        ctx.fillStyle = "white";
+        ctx.fillRect(32 * (idx + 1), 32 * (idx + 1), 64, 64);
+        ctx.fillStyle = "black"
+        ctx.font = "16px Arial";
+        ctx.fillText(file.name, 32 * (idx + 1), 48 * (idx + 1) + 64);
+      })
+    }
+
+    const background = () => {
+      var grd = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      grd.addColorStop(0, "#017EF4");
+      grd.addColorStop(1, "#1708A1");
+
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    update();
+  </script>
+</body>
+</html>
