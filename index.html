@@ -14,31 +14,164 @@
 </head>
 <body>
   <canvas id="canvas"></canvas>
+  <script src="js/sprites.js"></script>
+  <script src="js/story.js"></script>
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
-    let showMenu = false;
-    const generateNewFile = () => (
+    const FILE_TYPES = {
+      TEXT: TEXT_SPRITE,
+      IMAGE: IMAGE_SPRITE
+    }
+
+    let grabbed = null;
+    let fileOpened = null;
+    const generateNewFile = (id, title, icon, content, size, attachment) => (
       {
-        name: "OS",
-        icon: "file",
-        content: "Teste"
+        id,
+        title,
+        icon,
+        content,
+        size,
+        attachment
       }
     );
+
+    const programs = [
+      {
+        id: 0,
+        title: "Trash",
+        icon: TRASH_SPRITE,
+        size: 1,
+        action: () => {}
+      },
+      {
+        id: 1,
+        title: "Send",
+        icon: SEND_SPRITE,
+        size: 1,
+        action: () => {console.log("Send")}
+      },
+      {
+        id: 2,
+        title: "Hide'n",
+        icon: HACKER_SPRITE,
+        size: 4,
+        action: () => {console.log("Hide")}
+      },
+      {
+        id: 3,
+        title: "Analyzer",
+        icon: ANALYZER_SPRITE,
+        size: 4,
+        action: () => {console.log("Analyzer")}
+      },
+    ];
     
-    const files = [{
-        name: "OS",
-        icon: "file",
-        content: "Teste"
+    const files = [
+      {
+        id: 0,
+        title: "Text",
+        icon: FILE_TYPES.TEXT,
+        content: "Teste",
+        size: 10
+      }, 
+      {
+        id: 1,
+        title: "Image",
+        icon: FILE_TYPES.IMAGE,
+        content: "Teste",
+        size: 50,
       }];
 
+
+      let size = 0;
+      files.forEach(file => size += file.size)
+      programs.forEach(program => size += program.size)
+
     const handleClick = e => {
-      if (e.pageX < 64 && e.pageY > (canvas.height - 64)) {
-        showMenu = !showMenu;
+      if ((e.pageX > 8 && e.pageX < 24) && (e.pageY > 8 && e.pageY < 24)) {
+        fileOpened = null
+      } else {
+        files.forEach((file, idx) => {
+          if ((e.pageX > 32 && e.pageX < (32 + 64)) && (e.pageY > 64 * (idx + 1) + (32 * idx) && e.pageY < 64 * (idx + 1) + (32 * idx) + 64)) {
+            grabbed = file;
+            // files.splice(files[idx], 1);
+          } else if ((e.pageX > 32 && e.pageX < (32 + 64)) && (e.pageY > 64 * (idx + 1) + (32 * idx) + 64 && e.pageY < 64 * (idx + 1) + (32 * idx) + 80)) {
+            console.log(file.title)
+          }
+        })
       }
     }
-    canvas.addEventListener('click', handleClick, false);
+
+    const handleMouseUp = e => {
+      console.log(e.pageX, e.pageY);
+      if ((e.pageX > canvas.width - 100 && e.pageX < canvas.width - 32) && (e.pageY > 64 && e.pageY < 128)) {
+        if (grabbed) {
+          const idx = files.findIndex(e => e.id === grabbed.id)
+          files.splice(idx, 1);
+
+          size = 0;
+          files.forEach(file => size += file.size)
+        }
+      } else if ((e.pageX > canvas.width - 100 && e.pageX < canvas.width - 32) && (e.pageY > 164 && e.pageY < 225)) {
+        if (programs[1] != null) {
+          programs[1].action()
+        }
+      } else if ((e.pageX > canvas.width - 100 && e.pageX < canvas.width - 32) && (e.pageY > 258 && e.pageY < 320)) {
+        if (programs[2] != null) {
+          programs[2].action()
+        }
+      } else if ((e.pageX > canvas.width - 100 && e.pageX < canvas.width - 32) && (e.pageY > 354 && e.pageY < 415)) {
+        if (programs[3] != null) {
+          programs[3].action()
+        }
+      }
+
+      grabbed = null
+    }
+    
+    const handleDoubleClick = e => {
+      files.forEach((file, idx) => {
+        if ((e.pageX > 32 && e.pageX < (32 + 64)) && (e.pageY > 64 * (idx + 1) + (32 * idx) && e.pageY < 64 * (idx + 1) + (32 * idx) + 64)) {
+          fileOpened = file
+        }
+      })
+    }
+
+    const getColor = value => {
+      switch (value) {
+        case 9:
+          return "transparent";
+        case 0:
+          return "white"
+        case 1:
+          return "black";
+        case 2:
+          return "lightblue"
+        case 3:
+          return "yellow"
+        case 4:
+          return "pink"
+        case 5:
+          return "red"
+        case 6:
+          return "green"
+        case 7:
+          return "grey"
+      }
+    }
+  
+    canvas.addEventListener('mouseup', handleMouseUp, false);
+    canvas.addEventListener('dblclick', handleDoubleClick, false);
+    canvas.addEventListener('mousedown', handleClick, false);
+    canvas.addEventListener('mousemove', e => {
+      if (grabbed) {
+        grabbed.x = e.offsetX;
+        grabbed.y = e.offsetY;
+      }
+    });
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -54,28 +187,81 @@
 
       ctx.fillStyle = "black";
       ctx.fillRect(0, canvas.height - 64, canvas.width, 64);
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, '0');
+      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      var yyyy = today.getFullYear();
+      var hr = String(today.getHours()).padStart(2, '0');
+      var min = String(today.getMinutes()).padStart(2, '0');
 
-      ctx.fillStyle = "blue";
-      ctx.beginPath();
-      ctx.arc(32, canvas.height - 32, 32, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      if (showMenu) {
+      today = hr + ":" + min + " - " + mm + '/' + dd + '/' + yyyy;
+      ctx.fillStyle = "white";
+      ctx.fillText(today, canvas.width - 150, canvas.height - 28);
+
+      ctx.fillStyle = "white";
+      ctx.fillText(`Storage: ${size}`, 40, canvas.height - 28);
+      ctx.fillRect(128, canvas.height - 36, 130, 8);
+      ctx.fillStyle = "green";
+      ctx.fillRect(128, canvas.height - 36, size * 1, 8);
+      ctx.fillStyle = "white";
+      ctx.fillText("13KB", 265, canvas.height - 28);
+
+      programs.forEach((program, idx) => {
+          const initialX = canvas.width - 100;
+          const initialY = 64 * (idx + 1) + 32 * idx;
+
+          program.icon.forEach((row, y) => {
+            row.forEach((column, x) => {
+              ctx.fillStyle = getColor(column);
+              ctx.fillRect(initialX + (x * 2), initialY + (y * 2), 2, 2);
+            })
+          })
+
+          ctx.fillStyle = "black"
+          ctx.font = "16px Arial";
+          ctx.fillText(program.title, initialX, initialY + 80);
+        })
+
+      if (grabbed) {
         ctx.fillStyle = "white";
-        ctx.fillRect(0, canvas.height - 256 - 64, 256, 256);
-
-        ctx.fillStyle = "black"
-        ctx.font = "30px Arial";
-        ctx.fillText("Shutdown", 32, canvas.height - 80);
+        grabbed.icon.forEach((row, y) => {
+          row.forEach((column, x) => {
+            ctx.fillStyle = getColor(column);
+            ctx.fillRect(grabbed.x + (x * 2), grabbed.y + (y * 2), 2, 2);
+          })
+        })
       }
+      
+      if (fileOpened) {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, 32);
+        ctx.fillStyle= "red"
+        ctx.beginPath();
+        ctx.arc(16, 16, 8, 0, 2 * Math.PI);
+        ctx.fill();
 
-      files.forEach((file, idx) => {
         ctx.fillStyle = "white";
-        ctx.fillRect(32 * (idx + 1), 32 * (idx + 1), 64, 64);
-        ctx.fillStyle = "black"
-        ctx.font = "16px Arial";
-        ctx.fillText(file.name, 32 * (idx + 1), 48 * (idx + 1) + 64);
-      })
+        ctx.fillRect(0, 32, canvas.width, canvas.height - 32 - 64);
+
+        ctx.fillStyle = "black";
+        ctx.fillText(fileOpened.content, 32, 64);
+      } else {  
+        files.forEach((file, idx) => {
+          const initialX = 32;
+          const initialY = 64 * (idx + 1) + 32 * idx;
+          
+          file.icon.forEach((row, y) => {
+            row.forEach((column, x) => {
+              ctx.fillStyle = getColor(column);
+              ctx.fillRect(initialX + (x * 2), initialY + (y * 2), 2, 2);
+            })
+          })
+
+          ctx.fillStyle = "black"
+          ctx.font = "16px Arial";
+          ctx.fillText(file.title, initialX, initialY + 80);
+        })
+      }
     }
 
     const background = () => {
