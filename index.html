@@ -14,265 +14,141 @@
 </head>
 <body>
   <canvas id="canvas"></canvas>
-  <script src="js/sprites.js"></script>
-  <script src="js/story.js"></script>
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-
-    const FILE_TYPES = {
-      TEXT: TEXT_SPRITE,
-      IMAGE: IMAGE_SPRITE
-    }
-
-    let grabbed = null;
-    let fileOpened = null;
-    const generateNewFile = (id, title, icon, content, size, attachment) => (
-      {
-        id,
-        title,
-        icon,
-        content,
-        size,
-        attachment
-      }
-    );
-
-    const programs = [
-      {
-        id: 0,
-        title: "Trash",
-        icon: TRASH_SPRITE,
-        size: 1,
-        action: () => {}
-      },
-      {
-        id: 1,
-        title: "Send",
-        icon: SEND_SPRITE,
-        size: 1,
-        action: () => {console.log("Send")}
-      },
-      {
-        id: 2,
-        title: "Hide'n",
-        icon: HACKER_SPRITE,
-        size: 4,
-        action: () => {console.log("Hide")}
-      },
-      {
-        id: 3,
-        title: "Analyzer",
-        icon: ANALYZER_SPRITE,
-        size: 4,
-        action: () => {console.log("Analyzer")}
-      },
-    ];
-    
-    const files = [
-      {
-        id: 0,
-        title: "Text",
-        icon: FILE_TYPES.TEXT,
-        content: "Teste",
-        size: 10
-      }, 
-      {
-        id: 1,
-        title: "Image",
-        icon: FILE_TYPES.IMAGE,
-        content: "Teste",
-        size: 50,
-      }];
-
-
-      let size = 0;
-      files.forEach(file => size += file.size)
-      programs.forEach(program => size += program.size)
-
-    const handleClick = e => {
-      if ((e.pageX > 8 && e.pageX < 24) && (e.pageY > 8 && e.pageY < 24)) {
-        fileOpened = null
-      } else {
-        files.forEach((file, idx) => {
-          if ((e.pageX > 32 && e.pageX < (32 + 64)) && (e.pageY > 64 * (idx + 1) + (32 * idx) && e.pageY < 64 * (idx + 1) + (32 * idx) + 64)) {
-            grabbed = file;
-            // files.splice(files[idx], 1);
-          } else if ((e.pageX > 32 && e.pageX < (32 + 64)) && (e.pageY > 64 * (idx + 1) + (32 * idx) + 64 && e.pageY < 64 * (idx + 1) + (32 * idx) + 80)) {
-            console.log(file.title)
-          }
-        })
-      }
-    }
-
-    const handleMouseUp = e => {
-      console.log(e.pageX, e.pageY);
-      if ((e.pageX > canvas.width - 100 && e.pageX < canvas.width - 32) && (e.pageY > 64 && e.pageY < 128)) {
-        if (grabbed) {
-          const idx = files.findIndex(e => e.id === grabbed.id)
-          files.splice(idx, 1);
-
-          size = 0;
-          files.forEach(file => size += file.size)
-        }
-      } else if ((e.pageX > canvas.width - 100 && e.pageX < canvas.width - 32) && (e.pageY > 164 && e.pageY < 225)) {
-        if (programs[1] != null) {
-          programs[1].action()
-        }
-      } else if ((e.pageX > canvas.width - 100 && e.pageX < canvas.width - 32) && (e.pageY > 258 && e.pageY < 320)) {
-        if (programs[2] != null) {
-          programs[2].action()
-        }
-      } else if ((e.pageX > canvas.width - 100 && e.pageX < canvas.width - 32) && (e.pageY > 354 && e.pageY < 415)) {
-        if (programs[3] != null) {
-          programs[3].action()
-        }
-      }
-
-      grabbed = null
-    }
-    
-    const handleDoubleClick = e => {
-      files.forEach((file, idx) => {
-        if ((e.pageX > 32 && e.pageX < (32 + 64)) && (e.pageY > 64 * (idx + 1) + (32 * idx) && e.pageY < 64 * (idx + 1) + (32 * idx) + 64)) {
-          fileOpened = file
-        }
-      })
-    }
-
-    const getColor = value => {
-      switch (value) {
-        case 9:
-          return "transparent";
-        case 0:
-          return "white"
-        case 1:
-          return "black";
-        case 2:
-          return "lightblue"
-        case 3:
-          return "yellow"
-        case 4:
-          return "pink"
-        case 5:
-          return "red"
-        case 6:
-          return "green"
-        case 7:
-          return "grey"
-      }
-    }
-  
-    canvas.addEventListener('mouseup', handleMouseUp, false);
-    canvas.addEventListener('dblclick', handleDoubleClick, false);
-    canvas.addEventListener('mousedown', handleClick, false);
-    canvas.addEventListener('mousemove', e => {
-      if (grabbed) {
-        grabbed.x = e.offsetX;
-        grabbed.y = e.offsetY;
-      }
-    });
+    let money = 0;
+    let space = 0;
+    let moneyPSecond = 1;
+    let time = 0;
+    let animation = 0;
+    let automaticBuy = false;
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const update = () => {
-      draw()
+    const data = {
+      disket: {
+        price: 1,
+        value: 1,
+      },
+      cd: {
+        price: 15,
+        value: 15,
+      },
+      pendrive: {
+        price: 140,
+        value: 140,
+      },
+      hdd: {
+        price: 450,
+        value: 450,
+      },
+      ssd: {
+        price: 1000,
+        value: 1000,
+      },
+      cloud: {
+        price: 2450,
+        value: 2450,
+      },
+    }
 
+    canvas.addEventListener('mousedown', handleClick, false);
+
+    function handleClick(e) {
+      if ((e.pageX > 64 && e.pageX < canvas.width / 2) && (e.pageY > canvas.height / 2 - 128 && e.pageY < canvas.height / 2)) {
+        console.log("diskey");
+      } else if ((e.pageX > 64 && e.pageX < canvas.width / 2) && (e.pageY > canvas.height / 2 && e.pageY < canvas.height / 2 + 128)) {
+        console.log("sjk");
+      } else if ((e.pageX > 64 && e.pageX < canvas.width / 2) && (e.pageY > canvas.height / 2 + 128 && e.pageY < canvas.height / 2 + 128 + 128)) {
+        console.log("snjsk");
+      } else if ((e.pageX > canvas.width / 2 && e.pageX < canvas.width - 64) && (e.pageY > canvas.height / 2 - 128 && e.pageY < canvas.height / 2)) {
+        console.log("hjs");
+      } else if ((e.pageX > canvas.width / 2 && e.pageX < canvas.width - 64) && (e.pageY > canvas.height / 2 && e.pageY < canvas.height / 2 + 128)) {
+        console.log("ssd");
+      } else if ((e.pageX > canvas.width / 2 && e.pageX < canvas.width - 64) && (e.pageY > canvas.height / 2 + 128 && e.pageY < canvas.height / 2 + 128 + 128)) {
+        console.log("cloud");
+      }
+    }
+
+    function draw() {
+      ctx.fillStyle = "white"
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "red";
+      ctx.fillRect(64, canvas.height / 2 - 128, canvas.width / 2 - 64, 128);
+      ctx.fillStyle = "black";
+      ctx.fillRect(92, canvas.height / 2 - 92, 64, 64);
+      ctx.font = "16px Arial";
+      ctx.fillText("JSket", 192, canvas.height / 2 - 70);
+      ctx.fillText(`$${data.disket.price}`, 192, canvas.height / 2 - 50);
+      ctx.fillText(`$${data.disket.value}`, 192, canvas.height / 2 - 30);
+      ctx.fillStyle = "grey";
+      ctx.fillRect(64, canvas.height / 2, canvas.width / 2 - 64, 128);
+      ctx.fillStyle = "black";
+      ctx.fillRect(92, canvas.height / 2 + 32, 64, 64);
+      ctx.fillText("JSk", 192, canvas.height / 2 + 50);
+      ctx.fillText(`$${data.cd.price}`, 192, canvas.height / 2 + 70);
+      ctx.fillText(`$${data.cd.value}`, 192, canvas.height / 2 + 90);
+      ctx.fillStyle = "green";
+      ctx.fillRect(64, canvas.height / 2 + 128, canvas.width / 2 - 64, 128);
+      ctx.fillStyle = "black";
+      ctx.fillRect(92, canvas.height / 2 + 164, 64, 64);
+      ctx.fillText("SanJsk", 192, canvas.height / 2 + 180);
+      ctx.fillText(`$${data.pendrive.price}`, 192, canvas.height / 2 + 200);
+      ctx.fillText(`$${data.pendrive.value}`, 192, canvas.height / 2 + 220);
+
+      ctx.fillStyle = "grey";
+      ctx.fillRect(canvas.width / 2, canvas.height / 2 - 128, canvas.width / 2 - 64, 128);
+      ctx.fillStyle = "black";
+      ctx.fillRect(canvas.width / 2 + 32, canvas.height / 2 - 92, 64, 64);
+      ctx.fillText("HJD", canvas.width / 2 + 128, canvas.height / 2 - 70);
+      ctx.fillText(`$${data.hdd.price}`, canvas.width / 2 + 128, canvas.height / 2 - 50);
+      ctx.fillText(`$${data.hdd.value}`, canvas.width / 2 + 128, canvas.height / 2 - 30);
+      ctx.fillStyle = "green";
+      ctx.fillRect(canvas.width / 2, canvas.height / 2, canvas.width / 2 - 64, 128);
+      ctx.fillStyle = "black";
+      ctx.fillRect(canvas.width / 2 + 32, canvas.height / 2 + 32, 64, 64);
+      ctx.fillText("JSSD", canvas.width / 2 + 128, canvas.height / 2 + 50);
+      ctx.fillText(`$${data.ssd.price}`, canvas.width / 2 + 128, canvas.height / 2 + 70);
+      ctx.fillText(`$${data.ssd.value}`, canvas.width / 2 + 128, canvas.height / 2 + 90);
+      ctx.fillStyle = "red";
+      ctx.fillRect(canvas.width / 2, canvas.height / 2 + 128, canvas.width / 2 - 64, 128);
+      ctx.fillStyle = "black";
+      ctx.fillRect(canvas.width / 2 + 32, canvas.height / 2 + 164, 64, 64);
+      ctx.fillText("Cloud", canvas.width / 2 + 128, canvas.height / 2 + 180);
+      ctx.fillText(`$${data.cloud.price}`, canvas.width / 2 + 128, canvas.height / 2 + 200);
+      ctx.fillText(`$${data.cloud.value}`, canvas.width / 2 + 128, canvas.height / 2 + 220);
+
+      ctx.fillStyle = "blue";
+      ctx.fillRect(0, 198, canvas.width, 32);
+      ctx.fillStyle = "grey";
+      ctx.fillRect(canvas.width / 2 - 192, 32, 384, 128);
+      
+      
+      ctx.fillStyle = "black";
+      ctx.fillText(`${space}`, canvas.width / 2 + 64, 128);
+      ctx.fillStyle = "white";
+      ctx.fillRect(canvas.width / 2 - 168, 80, 336, 28);
+      ctx.fillStyle = "green";
+      ctx.fillRect(canvas.width / 2 - 168, 80, animation, 28);
+    }
+
+    function update() {
+      draw();
+      if (automaticBuy) {
+        time += 1/60;
+        animation += 1;
+        if (animation > 336) animation = 0;
+        if (time > 1) {
+          space += moneyPSecond;
+          time = 0;
+        }
+      }
       requestAnimationFrame(update);
     }
-
-    const draw = () => {
-      background();
-
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, canvas.height - 64, canvas.width, 64);
-      var today = new Date();
-      var dd = String(today.getDate()).padStart(2, '0');
-      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-      var yyyy = today.getFullYear();
-      var hr = String(today.getHours()).padStart(2, '0');
-      var min = String(today.getMinutes()).padStart(2, '0');
-
-      today = hr + ":" + min + " - " + mm + '/' + dd + '/' + yyyy;
-      ctx.fillStyle = "white";
-      ctx.fillText(today, canvas.width - 150, canvas.height - 28);
-
-      ctx.fillStyle = "white";
-      ctx.fillText(`Storage: ${size}`, 40, canvas.height - 28);
-      ctx.fillRect(128, canvas.height - 36, 130, 8);
-      ctx.fillStyle = "green";
-      ctx.fillRect(128, canvas.height - 36, size * 1, 8);
-      ctx.fillStyle = "white";
-      ctx.fillText("13KB", 265, canvas.height - 28);
-
-      programs.forEach((program, idx) => {
-          const initialX = canvas.width - 100;
-          const initialY = 64 * (idx + 1) + 32 * idx;
-
-          program.icon.forEach((row, y) => {
-            row.forEach((column, x) => {
-              ctx.fillStyle = getColor(column);
-              ctx.fillRect(initialX + (x * 2), initialY + (y * 2), 2, 2);
-            })
-          })
-
-          ctx.fillStyle = "black"
-          ctx.font = "16px Arial";
-          ctx.fillText(program.title, initialX, initialY + 80);
-        })
-
-      if (grabbed) {
-        ctx.fillStyle = "white";
-        grabbed.icon.forEach((row, y) => {
-          row.forEach((column, x) => {
-            ctx.fillStyle = getColor(column);
-            ctx.fillRect(grabbed.x + (x * 2), grabbed.y + (y * 2), 2, 2);
-          })
-        })
-      }
-      
-      if (fileOpened) {
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, canvas.width, 32);
-        ctx.fillStyle= "red"
-        ctx.beginPath();
-        ctx.arc(16, 16, 8, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 32, canvas.width, canvas.height - 32 - 64);
-
-        ctx.fillStyle = "black";
-        ctx.fillText(fileOpened.content, 32, 64);
-      } else {  
-        files.forEach((file, idx) => {
-          const initialX = 32;
-          const initialY = 64 * (idx + 1) + 32 * idx;
-          
-          file.icon.forEach((row, y) => {
-            row.forEach((column, x) => {
-              ctx.fillStyle = getColor(column);
-              ctx.fillRect(initialX + (x * 2), initialY + (y * 2), 2, 2);
-            })
-          })
-
-          ctx.fillStyle = "black"
-          ctx.font = "16px Arial";
-          ctx.fillText(file.title, initialX, initialY + 80);
-        })
-      }
-    }
-
-    const background = () => {
-      var grd = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      grd.addColorStop(0, "#017EF4");
-      grd.addColorStop(1, "#1708A1");
-
-      ctx.fillStyle = grd;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
+    
     update();
   </script>
 </body>
